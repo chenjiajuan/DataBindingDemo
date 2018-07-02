@@ -32,10 +32,10 @@ class RecyclerActivity:Activity() {
         recyclerDataBiding=DataBindingUtil.setContentView(this@RecyclerActivity,R.layout.activity_recycler)
         recyclerDataBiding?.recyclerView?.layoutManager= StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
         recyclerDataBiding?.recyclerView?.addItemDecoration(SpacesItemDecoration(10))
-        initData()
+        requestDate()
     }
 
-    fun initData() {
+    private fun requestDate() {
         var okphht = OkHttpClient()
         Log.d(TAG,"url : "+url)
         var builder = Request.Builder().get().url(url)
