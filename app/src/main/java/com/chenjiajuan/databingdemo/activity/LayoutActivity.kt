@@ -1,4 +1,4 @@
-package com.chenjiajuan.databingdemo
+package com.chenjiajuan.databingdemo.activity
 
 import android.app.Activity
 import android.databinding.DataBindingUtil
@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import com.chenjiajuan.databingdemo.R
 import com.chenjiajuan.databingdemo.data.User
 import com.chenjiajuan.databingdemo.databinding.ActivityLayoutBinding
 
@@ -17,17 +18,17 @@ class LayoutActivity : Activity() {
     private var TAG:String="LayoutActivity"
     private var layoutData: ActivityLayoutBinding?= null
     private var user:User ?=null
-    private var presenter:ClickPresenter?=null
+    private var presenter: ClickPresenter?=null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        layoutData= DataBindingUtil.setContentView(this@LayoutActivity,R.layout.activity_layout)
+        layoutData= DataBindingUtil.setContentView(this@LayoutActivity, R.layout.activity_layout)
         user= User("Tom","123$23hgf",25)
         layoutData?.user=this.user
         presenter=ClickPresenter()
         layoutData?.presenter=this.presenter
 
-    }
+}
 
 
     inner class ClickPresenter{

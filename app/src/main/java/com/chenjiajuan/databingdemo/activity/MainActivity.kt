@@ -1,7 +1,8 @@
-package com.chenjiajuan.databingdemo
+package com.chenjiajuan.databingdemo.activity
 
 import android.app.Activity
 import android.os.Bundle
+import com.chenjiajuan.databingdemo.R
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : Activity() {

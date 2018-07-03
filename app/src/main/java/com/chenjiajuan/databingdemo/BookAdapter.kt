@@ -9,77 +9,120 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.bumptech.glide.Glide
+import com.chenjiajuan.databingdemo.databinding.ItemBookBottomBinding
 import com.chenjiajuan.databingdemo.databinding.ItemBookDescribeBinding
-import com.chenjiajuan.databingdemo.model.BookItem
+import com.chenjiajuan.databingdemo.model.BooksBean
 
 
 /**
  * Created by chenjiajuan on 2018/6/23.
  */
-class BookAdapter:RecyclerView.Adapter<BookAdapter.BookViewHolder> {
+class BookAdapter:RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private var context:Context?=null
     private var  itemBookData:ItemBookDescribeBinding?=null
-    private var bookItem:BookItem?=null
-    constructor(context: Context,bookItem: BookItem){
+    private var itemBottomData:ItemBookBottomBinding?=null
+    private var onItemClick:onItemClickListener?=null
+    private var ITEM_TYPE_BOOK:Int=0
+    private var ITEM_TYPE_BOTTOM:Int=1
+    private var books:ArrayList<BooksBean> ?= ArrayList()
+
+    constructor(context: Context){
         this.context=context
-        this.bookItem=bookItem
-
     }
-    override fun onBindViewHolder(holder: BookViewHolder, position: Int) {
-        var  book=bookItem!!.books[position]
-        /**
-         * 方式一
-         * Glide.with(context).load(book.images.small).into(holder.getBinding().ivBookPicture)
-          holder.getBinding().tvBookName.text= book.title
-        holder.getBinding().tvBookAuthor.text=book.author.toString()
-        holder.getBinding().tvBookDescribe.text= book.summary
-        holder.getBinding().tvAverage.text=book.rating.average
-        holder.getBinding().rtNumRaters.rating = book.rating?.average!!.toFloat()
-         */
-        /**
-         * 方式二
-         */
-        holder.getBinding().bookItem=book
-        holder.getBinding().executePendingBindings()  //刷新数据
+
+    fun  addListData(bookList: ArrayList<BooksBean>){
+        books?.addAll(bookList)
+    }
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        if (holder is BookViewHolder){
+            var  book=books?.get(position)
+           holder.getBinding().bookItem=book
+           holder.getBinding().root.setOnClickListener{
+               onItemClick?.onItemClick(position)
+           }
+           holder.getBinding().executePendingBindings()
+        }else if (holder is BottomViewHolder){
+
+        }
 
     }
 
+    override fun getItemViewType(position: Int): Int {
+        return if (position<books?.size!!){
+            ITEM_TYPE_BOOK
+        }else{
+            ITEM_TYPE_BOTTOM
+        }
+    }
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): BookViewHolder? {
-        itemBookData= DataBindingUtil.inflate(LayoutInflater.from(context),R.layout.item_book_describe,parent,false,MyComponent())
-        return BookViewHolder(itemBookData!!)
+
+    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder {
+        return if (viewType==ITEM_TYPE_BOOK){
+            itemBookData= DataBindingUtil.inflate(LayoutInflater.from(context),
+                        R.layout.item_book_describe,parent,false,MyComponent())
+            BookViewHolder(itemBookData!!)
+        }else {
+            itemBottomData=DataBindingUtil.inflate(LayoutInflater.from(context),
+                         R.layout.item_book_bottom,parent,false)
+            BottomViewHolder(itemBottomData!!)
+        }
+
     }
 
     override fun getItemCount(): Int {
-        return bookItem?.books?.size as Int
+        return books?.size as Int +2
     }
 
     /**
      * 方式二，采用注入的方式，需要声明DataBindingComponent，在inflate的时候传入
-     */
+     *  */
+
     open class ImageUrl{
         @BindingAdapter("imageUrl")
-        fun   loadImage(view:ImageView,url:String){
+        fun  loadImage(view: ImageView, url:String){
             Glide.with(view.context).load(url).into(view)
         }
     }
-    class MyComponent:DataBindingComponent{
-        override fun getImageUrl():ImageUrl{
-            return ImageUrl()
 
+    class MyComponent:DataBindingComponent{
+
+         override fun getImageUrl(): ImageUrl {
+            return ImageUrl()
         }
     }
 
+
+
+    interface onItemClickListener{
+        fun  onItemClick(position: Int)
+    }
+
+    fun setOnItemClickListener(onItemClickListener: onItemClickListener ){
+          this.onItemClick=onItemClickListener
+    }
+
+
+
     class BookViewHolder: RecyclerView.ViewHolder {
 
-        private var mBinding:ItemBookDescribeBinding?=null
+        private var binding:ItemBookDescribeBinding?=null
 
         constructor(binding: ItemBookDescribeBinding):super(binding.root){
-            mBinding=binding
+            this.binding=binding
         }
 
         fun getBinding():ItemBookDescribeBinding{
-            return this!!.mBinding!!
+            return this.binding!!
+        }
+    }
+
+    class BottomViewHolder:RecyclerView.ViewHolder{
+        private var binding:ItemBookBottomBinding?=null
+        constructor(binding: ItemBookBottomBinding):super(binding.root){
+            this.binding=binding
+        }
+        fun  getBinding():ItemBookBottomBinding{
+            return this.binding!!
         }
     }
 
