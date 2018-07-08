@@ -1,4 +1,4 @@
-package com.chenjiajuan.databingdemo
+package com.chenjiajuan.databingdemo.adapter
 
 import android.content.Context
 import android.databinding.BindingAdapter
@@ -9,9 +9,11 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.bumptech.glide.Glide
+import com.chenjiajuan.databingdemo.R
 import com.chenjiajuan.databingdemo.databinding.ItemBookBottomBinding
 import com.chenjiajuan.databingdemo.databinding.ItemBookDescribeBinding
 import com.chenjiajuan.databingdemo.model.BooksBean
+import java.util.*
 
 
 /**
@@ -21,17 +23,19 @@ class BookAdapter:RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private var context:Context?=null
     private var  itemBookData:ItemBookDescribeBinding?=null
     private var itemBottomData:ItemBookBottomBinding?=null
-    private var onItemClick:onItemClickListener?=null
-    private var ITEM_TYPE_BOOK:Int=0
-    private var ITEM_TYPE_BOTTOM:Int=1
+    private var onItemClick: onItemClickListener?=null
+    public var ITEM_TYPE_BOOK:Int=2
+    public var ITEM_TYPE_BOTTOM:Int=1
     private var books:ArrayList<BooksBean> ?= ArrayList()
-
+    private var  booksList = arrayOfNulls<BooksBean>(8)
     constructor(context: Context){
         this.context=context
     }
 
     fun  addListData(bookList: ArrayList<BooksBean>){
         books?.addAll(bookList)
+//        booksList.addAll(bookList)
+//        Log.e("TAG"," bookList : "+booksList.toString())
     }
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (holder is BookViewHolder){
@@ -59,18 +63,18 @@ class BookAdapter:RecyclerView.Adapter<RecyclerView.ViewHolder> {
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder {
         return if (viewType==ITEM_TYPE_BOOK){
             itemBookData= DataBindingUtil.inflate(LayoutInflater.from(context),
-                        R.layout.item_book_describe,parent,false,MyComponent())
+                    R.layout.item_book_describe,parent,false, MyComponent())
             BookViewHolder(itemBookData!!)
         }else {
             itemBottomData=DataBindingUtil.inflate(LayoutInflater.from(context),
-                         R.layout.item_book_bottom,parent,false)
+                    R.layout.item_book_bottom,parent,false)
             BottomViewHolder(itemBottomData!!)
         }
 
     }
 
     override fun getItemCount(): Int {
-        return books?.size as Int +2
+        return books?.size as Int +1
     }
 
     /**
@@ -97,7 +101,7 @@ class BookAdapter:RecyclerView.Adapter<RecyclerView.ViewHolder> {
         fun  onItemClick(position: Int)
     }
 
-    fun setOnItemClickListener(onItemClickListener: onItemClickListener ){
+    fun setOnItemClickListener(onItemClickListener: onItemClickListener){
           this.onItemClick=onItemClickListener
     }
 

@@ -5,19 +5,19 @@ import android.content.Context
 import android.databinding.DataBindingUtil
 import android.graphics.Rect
 import android.os.*
+import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.StaggeredGridLayoutManager
-import android.util.Log
 import android.view.View
 import android.widget.Toast
-import com.chenjiajuan.databingdemo.BookAdapter
 import com.chenjiajuan.databingdemo.R
+import com.chenjiajuan.databingdemo.adapter.BookAdapter
 import com.chenjiajuan.databingdemo.databinding.ActivityRecyclerBinding
 import com.chenjiajuan.databingdemo.model.BookItem
 import com.chenjiajuan.databingdemo.model.BooksBean
 import com.google.gson.Gson
 import okhttp3.*
 import java.io.IOException
+import java.util.*
 
 /**
  * Created by chenjiajuan on 2018/6/23.
@@ -25,33 +25,47 @@ import java.io.IOException
 class RecyclerActivity:Activity() {
     private var TAG:String="RecyclerActivity"
     private var recyclerDataBiding:ActivityRecyclerBinding?=null
-    private var url="https://api.douban.com/v2/book/search?tag=科幻&count=16"
+    private var count:Int=16
+    private var oldCount:Int=count
+    private var url="https://api.douban.com/v2/book/search?tag=科幻&count="
     private var bookAdapter: BookAdapter?=null
     private var bookData:BookItem?=null
-    private var staggeredGridLayoutManager:StaggeredGridLayoutManager?=null
+    private var layoutManager:GridLayoutManager?=null
+    private var refresh:Boolean=false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         recyclerDataBiding=DataBindingUtil.setContentView(this@RecyclerActivity, R.layout.activity_recycler)
-        staggeredGridLayoutManager=StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
-        recyclerDataBiding?.recyclerView?.layoutManager= staggeredGridLayoutManager
+        layoutManager=GridLayoutManager(this,2)
+        layoutManager?.spanSizeLookup=object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int {
+                return if ( bookAdapter?.getItemViewType(position)==1){
+                    bookAdapter?.ITEM_TYPE_BOOK as Int
+                }else{
+                    bookAdapter?.ITEM_TYPE_BOTTOM as Int
+                }
+            }
+
+        }
+        recyclerDataBiding?.recyclerView?.layoutManager= layoutManager
         recyclerDataBiding?.recyclerView?.addItemDecoration(SpacesItemDecoration(10))
         recyclerDataBiding?.recyclerView?.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView?, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
-                Log.e(TAG,"onScrollStateChanged .....")
-                if (newState==0)
-                if (isScrollToBottom()){
-                    requestDate()
+                when(newState){
+                     RecyclerView.SCROLL_STATE_IDLE->{
+                        if (isScrollToBottom()){
+                            oldCount=count
+                            count+=22
+                            refresh=!refresh
+                            requestDate()
+                        }
+                    }
                 }
 
 
-            }
 
-            override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                Log.d(TAG,"onScrolled dx : $dx , dy : $dy")
             }
         })
         bookAdapter= BookAdapter(this@RecyclerActivity)
@@ -64,12 +78,15 @@ class RecyclerActivity:Activity() {
         requestDate()
     }
 
+    /**
+     * 获取数据
+     */
     private fun requestDate() {
-        var okphht = OkHttpClient()
-        Log.d(TAG,"url : "+url)
-        var builder = Request.Builder().get().url(url)
+        var okhttp = OkHttpClient()
+        var newUrl=url+count+""
+        var builder = Request.Builder().get().url(newUrl)
         var request = builder.build()
-        var call = okphht.newCall(request)
+        var call = okhttp.newCall(request)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call?, e: IOException?) {
 
@@ -83,15 +100,31 @@ class RecyclerActivity:Activity() {
         })
     }
 
-    private fun refresh(bookList: ArrayList<BooksBean>){
-        bookAdapter?.addListData(bookList)
+    /**
+     * 底部刷新列表
+     */
+    private fun refresh( bookList: ArrayList<BooksBean>){
+        var  bookList2: ArrayList<BooksBean> =ArrayList()
+        if (refresh){
+            (oldCount..(bookList.size-1)).mapTo(bookList2) { bookList[it] }
+            bookAdapter?.addListData(bookList2)
+            refresh=!refresh
+
+        }else{
+            bookAdapter?.addListData(bookList)
+        }
         bookAdapter?.notifyDataSetChanged()
     }
+
     private val myHandler: Handler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message?) {
             refresh(bookData?.books as ArrayList<BooksBean>)
         }
     }
+
+    /**
+     * 分割线线
+     */
     inner class SpacesItemDecoration(private var space:Int=16):RecyclerView.ItemDecoration(){
         override fun getItemOffsets(outRect: Rect?, view: View?, parent: RecyclerView?, state: RecyclerView.State?) {
             outRect?.top=space
@@ -99,57 +132,18 @@ class RecyclerActivity:Activity() {
         }
     }
 
+    /**
+     * 判断是否已经滑动到底部
+     */
     private fun isScrollToBottom():Boolean {
-        var spaceCount = staggeredGridLayoutManager?.spanCount as Int
-        var positions = intArrayOf(spaceCount)
-        var nowBottoms = staggeredGridLayoutManager?.findLastVisibleItemPositions(null)
-        var visibleCount = staggeredGridLayoutManager?.childCount as Int
-        var totalCount = staggeredGridLayoutManager?.itemCount as Int
-        Log.e(TAG," positions :$positions ,spaceCount :$spaceCount ," +
-                "nowBottoms: $nowBottoms , visibleCount :$visibleCount , totalCount : $totalCount")
-        if (nowBottoms!=null && nowBottoms.isNotEmpty()) {
-            nowBottoms.indices
-                    .filter {
-                        visibleCount>0 && nowBottoms[it] ==totalCount-1
-                    }
-                    .forEach {
-                        Log.e(TAG,"滑到底部")
-                    }
-                    .let {
-                        Log.e(TAG,"再次请求数据")
-                      return true
-                    }
+        var nowBottoms = layoutManager?.findLastVisibleItemPosition()
+        var visibleCount = layoutManager?.childCount as Int
+        var totalCount = layoutManager?.itemCount as Int
+        if (visibleCount>0 && nowBottoms==totalCount-1){
+            return true
         }
         return false
-        /**
-         *
-         *   //                var totalHeight = recyclerDataBiding?.recyclerView?.height as Int
-        //                var positionHeight = staggeredGridLayoutManager?.findViewByPosition(bottom)!!.bottom
-        //                Log.e(TAG,"total :$totalHeight , positionHeight : $positionHeight")
-        //                if (bottom >= totalCount && positionHeight <= totalHeight) {
-        //                    return true
-        //                }
-         *
-         *
-         *
-         *
-        public static boolean isVisBottom(RecyclerView recyclerView){
-        LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-        //屏幕中最后一个可见子项的position
-        int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
-        //当前屏幕所看到的子项个数
-        int visibleItemCount = layoutManager.getChildCount();
-        //当前RecyclerView的所有子项个数
-        int totalItemCount = layoutManager.getItemCount();
-        //RecyclerView的滑动状态
-        int state = recyclerView.getScrollState();
-        if(visibleItemCount > 0 && lastVisibleItemPosition == totalItemCount - 1 && state == recyclerView.SCROLL_STATE_IDLE){
-        return true;
-        }else {
-        return false;
-        }
-        }
-         */
     }
+
 
 }

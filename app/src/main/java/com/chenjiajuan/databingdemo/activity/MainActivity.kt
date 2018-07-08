@@ -28,4 +28,8 @@ class MainActivity : Activity() {
             System.loadLibrary("native-lib")
         }
     }
+
+
 }
+
+
