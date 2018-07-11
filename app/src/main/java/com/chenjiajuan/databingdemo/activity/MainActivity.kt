@@ -3,7 +3,6 @@ package com.chenjiajuan.databingdemo.activity
 import android.app.Activity
 import android.os.Bundle
 import com.chenjiajuan.databingdemo.R
-import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : Activity() {
 
@@ -12,7 +11,7 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main)
 
         // Example of a call to a native method
-        sample_text.text = stringFromJNI()
+       // sample_text.text = stringFromJNI()
     }
 
     /**

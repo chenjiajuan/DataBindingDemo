@@ -24,18 +24,15 @@ class BookAdapter:RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private var  itemBookData:ItemBookDescribeBinding?=null
     private var itemBottomData:ItemBookBottomBinding?=null
     private var onItemClick: onItemClickListener?=null
-    public var ITEM_TYPE_BOOK:Int=2
-    public var ITEM_TYPE_BOTTOM:Int=1
+     var ITEM_TYPE_BOOK:Int=2
+     var ITEM_TYPE_BOTTOM:Int=1
     private var books:ArrayList<BooksBean> ?= ArrayList()
-    private var  booksList = arrayOfNulls<BooksBean>(8)
     constructor(context: Context){
         this.context=context
     }
 
     fun  addListData(bookList: ArrayList<BooksBean>){
         books?.addAll(bookList)
-//        booksList.addAll(bookList)
-//        Log.e("TAG"," bookList : "+booksList.toString())
     }
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (holder is BookViewHolder){
