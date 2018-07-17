@@ -38,14 +38,9 @@ class BookAdapter:RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (holder is BookViewHolder){
             var  book=books?.get(position)
            holder.getBinding().bookItem=book
-           holder.getBinding().root.setOnClickListener{
-               onItemClick?.onItemClick(position)
-           }
+           holder.getBinding().root.setOnClickListener{ onItemClick?.onItemClick(position) }
            holder.getBinding().executePendingBindings()
-        }else if (holder is BottomViewHolder){
-
         }
-
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -68,6 +63,15 @@ class BookAdapter:RecyclerView.Adapter<RecyclerView.ViewHolder> {
             BottomViewHolder(itemBottomData!!)
         }
 
+    }
+
+    override fun onViewRecycled(holder: RecyclerView.ViewHolder?) {
+        super.onViewRecycled(holder)
+        if (holder!=null){
+            if (holder is BookViewHolder){
+                holder.getBinding().ivBookPicture.setImageBitmap(null)
+            }
+        }
     }
 
     override fun getItemCount(): Int {
